@@ -2,7 +2,22 @@
 
     <property resource="application.properties" />
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeCallerData>true</includeCallerData>
+            <customFields>
+                    {
+                        "service" : "${spring.application.name}"
+                    }
+            </customFields>
 
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <shortenedClassNameLength>20</shortenedClassNameLength>
+                <rootCauseFirst>true</rootCauseFirst>
+            </throwableConverter>
+        </encoder>
+
+<!-- 
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <pattern>
@@ -31,7 +46,7 @@
                 <message/>
                 <mdc/>
             </providers>
-        </encoder>
+        </encoder> -->
     </appender>
 
     <root level="info">

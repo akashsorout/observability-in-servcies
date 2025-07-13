@@ -6,10 +6,17 @@ services:
     container_name: sample-service
     depends_on:
       - log-router
+      - datadog-agent
     ports:
       - 9000:8080
     environment:
-      - ENV=dev
+      - DD_ENV=${ENV}
+      - DD_SERVICE=sample-service
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+      - DD_AGENT_HOST=datadog-agent
+
+
     logging:
       driver: "fluentd"
       options:
@@ -22,8 +29,14 @@ services:
     container_name: greet-service
     depends_on:
       - log-router
+      - datadog-agent
     environment:
-      - ENV=dev
+      - DD_ENV=${ENV}
+      - DD_SERVICE=greet-service
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+      - DD_AGENT_HOST=datadog-agent
+
     logging:
       driver: "fluentd"
       options:
@@ -37,26 +50,23 @@ services:
       - "24224:24224"
     environment:
       - DD_API_KEY=${DD_API_KEY}
-      - ENV=dev
+      - ENV=${ENV}
     volumes:
       - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
 
-  # datadog:
-  #  image: gcr.io/datadoghq/agent:7
-  #  container_name: datadog-agent
-  #  environment:
-  #    - DD_SITE=datadoghq.com
-  #    - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
-  #    - DD_ENV=dev
-  #    - DD_API_KEY=${DD_API_KEY}
-     
-  #  volumes:
-  #    - /var/run/docker.sock:/var/run/docker.sock:ro
-  #    - /proc/:/host/proc/:ro
-  #    - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
-  #    - /var/lib/docker/containers:/var/lib/docker/containers:ro
-
-
-
-
-
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: datadog-agent
+    ports:
+      - 8126:8126
+    environment:
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_ENV=${ENV}
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_LOGS_ENABLED=true
+      - DD_APM_ENABLED=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
