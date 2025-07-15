@@ -6,8 +6,15 @@ services:
     container_name: sample-service
     depends_on:
       - log-router
+      - datadog-agent
     ports:
       - 9000:8080
+    environment:
+      - DD_ENV=${ENV}
+      - DD_SERVICE=sample-service
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+      - DD_AGENT_HOST=datadog-agent
 
 
     logging:
@@ -22,7 +29,14 @@ services:
     container_name: greet-service
     depends_on:
       - log-router
-    
+      - datadog-agent
+    environment:
+      - DD_ENV=${ENV}
+      - DD_SERVICE=greet-service
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+      - DD_AGENT_HOST=datadog-agent
+
     logging:
       driver: "fluentd"
       options:
@@ -40,4 +54,20 @@ services:
     volumes:
       - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
 
-  
+  datadog-agent:
+    image: datadog/agent:7.64.3
+    container_name: datadog-agent
+    ports:
+      - 8126:8126
+    environment:
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_ENV=${ENV}
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_LOGS_ENABLED=false
+      - DD_APM_ENABLED=true
+      - DD_REMOTE_CONFIGURATION_ENABLED=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
